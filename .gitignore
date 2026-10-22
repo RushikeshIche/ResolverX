@@ -1,0 +1,45 @@
+antigravity.md
+
+# Binaries and executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+resolverx
+resolverx.exe
+lookup
+lookup.exe
+ResolverX
+
+# Test binaries
+*.test
+*.out
+
+# Go build cache and modules
+vendor/
+
+# Local databases and journals
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+resolverx.db*
+
+# OS specific files
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Fyne packaging outputs
+fyne-cross/
+*.apk
+*.aab

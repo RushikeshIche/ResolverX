@@ -189,7 +189,7 @@ ResolverX/
 ### Clone and Run
 
 ```bash
-git clone https://github.com/rushi/ResolverX.git
+git clone https://github.com/RushikeshIche/ResolverX.git
 cd ResolverX
 ```
 
@@ -289,47 +289,6 @@ Run with the **Go Race Detector**:
 ```bash
 go test -v -race ./...
 ```
-
-## Roadmap
-
-### Phase 1 — Desktop Foundation
-- [x] Initialize the Go module.
-- [x] Create the Fyne application window with tab navigation.
-- [x] Add dashboard, records management, and settings views.
-- [x] Implement A and AAAA record validation (RFC 1123).
-- [x] Add create, edit, and delete actions with modal forms.
-
-### Phase 2 — Persistent Storage
-- [x] Integrate pure-Go SQLite (`modernc.org/sqlite`).
-- [x] Store custom DNS records with unique constraints.
-- [x] Auto-seed sample records (`myapp.test`, `dev.test`, `ipv6.test`) on first run.
-- [x] Automated schema migrations.
-- [x] Event-driven `OnChange` subscriber for immediate cache invalidation.
-
-### Phase 3 — DNS Engine
-- [x] Implement synchronous dual UDP and TCP listeners on `127.0.0.1:5354`.
-- [x] Process A and AAAA queries.
-- [x] Authoritative DNS response builder (`NOERROR`, `NXDOMAIN`, `SERVFAIL`).
-- [x] Thread-safe start, stop, and restart controls in GUI and daemon.
-
-### Phase 4 — Forwarding and Caching
-- [x] Configurable upstream forwarder pool (`1.1.1.1:53`, `8.8.8.8:53`) with timeout failover.
-- [x] Thread-safe in-memory LRU cache.
-- [x] Dynamic TTL countdown decrements on cached responses.
-- [x] Instant cache invalidation when records are modified.
-
-### Phase 5 — System Integration & Observability
-- [x] Connect GUI to live resolver service.
-- [x] Real-time query log stream and live statistics counters.
-- [x] Thread-safe GUI updates using `fyne.Do`.
-- [x] Complete end-to-end integration test suite and race-condition tests (`-race`).
-
-### Phase 6 — Advanced Features (Future Enhancements)
-- [ ] Built-in HTTP URL redirector / shortlink engine (e.g. `gitrush.test` ➔ `https://github.com/RushikeshIche`).
-- [ ] Ad-blocking and domain blocklists (Pi-hole style).
-- [ ] Import and export records (JSON / CSV).
-- [ ] DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT) upstreaming.
-- [ ] Automated OS network adapter DNS configuration wizard.
 
 ## License
 

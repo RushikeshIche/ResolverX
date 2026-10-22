@@ -9,8 +9,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/rushi/ResolverX/internal/app"
-	"github.com/rushi/ResolverX/internal/config"
+	"github.com/RushikeshIche/ResolverX/internal/app"
+	"github.com/RushikeshIche/ResolverX/internal/config"
 )
 
 // SettingsView provides configuration management for listener and upstreams.
@@ -44,6 +44,12 @@ func (sv *SettingsView) Build() fyne.CanvasObject {
 	cacheMaxEntry := widget.NewEntry()
 	cacheMaxEntry.SetText(strconv.Itoa(cfg.CacheMaxEntries))
 
+	redirCheck := widget.NewCheck("Enable HTTP URL Redirects", nil)
+	redirCheck.SetChecked(cfg.HTTPRedirectEnabled)
+
+	redirAddrEntry := widget.NewEntry()
+	redirAddrEntry.SetText(cfg.HTTPRedirectAddress)
+
 	logCheck := widget.NewCheck("Log Incoming DNS Queries", nil)
 	logCheck.SetChecked(cfg.LogQueries)
 
@@ -64,12 +70,14 @@ func (sv *SettingsView) Build() fyne.CanvasObject {
 		}
 
 		newCfg := &config.Config{
-			ListenAddress:   strings.TrimSpace(listenEntry.Text),
-			UpstreamServers: cleanUpstreams,
-			CacheEnabled:    cacheCheck.Checked,
-			CacheMaxEntries: maxEntries,
-			LogQueries:      logCheck.Checked,
-			DatabasePath:    cfg.DatabasePath,
+			ListenAddress:       strings.TrimSpace(listenEntry.Text),
+			UpstreamServers:     cleanUpstreams,
+			CacheEnabled:        cacheCheck.Checked,
+			CacheMaxEntries:     maxEntries,
+			LogQueries:          logCheck.Checked,
+			DatabasePath:        cfg.DatabasePath,
+			HTTPRedirectEnabled: redirCheck.Checked,
+			HTTPRedirectAddress: strings.TrimSpace(redirAddrEntry.Text),
 		}
 
 		if err := newCfg.Validate(); err != nil {
@@ -91,6 +99,8 @@ func (sv *SettingsView) Build() fyne.CanvasObject {
 		widget.NewFormItem("Upstream DNS Servers (one per line)", upstreamsEntry),
 		widget.NewFormItem("Caching", cacheCheck),
 		widget.NewFormItem("Max Cache Entries", cacheMaxEntry),
+		widget.NewFormItem("URL Redirect Server", redirCheck),
+		widget.NewFormItem("HTTP Redirect Address", redirAddrEntry),
 		widget.NewFormItem("Logging", logCheck),
 	)
 

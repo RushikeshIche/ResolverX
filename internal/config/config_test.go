@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rushi/ResolverX/internal/config"
+	"github.com/RushikeshIche/ResolverX/internal/config"
 )
 
 func TestDefaultConfig(t *testing.T) {

@@ -3,14 +3,15 @@ package integration_test
 import (
 	"context"
 	"net"
+	"net/http"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/rushi/ResolverX/internal/app"
-	"github.com/rushi/ResolverX/internal/config"
-	"github.com/rushi/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/app"
+	"github.com/RushikeshIche/ResolverX/internal/config"
+	"github.com/RushikeshIche/ResolverX/internal/records"
 )
 
 func TestFullApplicationIntegration(t *testing.T) {
@@ -18,7 +19,7 @@ func TestFullApplicationIntegration(t *testing.T) {
 	cfgPath := filepath.Join(tempDir, "config.json")
 	dbPath := filepath.Join(tempDir, "records.db")
 
-	// Get a free loopback port
+	// Get a free loopback port for DNS
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("failed to allocate free port: %v", err)
@@ -26,13 +27,23 @@ func TestFullApplicationIntegration(t *testing.T) {
 	listenAddr := pc.LocalAddr().String()
 	pc.Close()
 
+	// Get a free loopback port for HTTP redirects
+	redirLn, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to allocate free port for redirect: %v", err)
+	}
+	redirAddr := redirLn.Addr().String()
+	_ = redirLn.Close()
+
 	initialCfg := &config.Config{
-		ListenAddress:   listenAddr,
-		UpstreamServers: []string{"1.1.1.1:53"},
-		CacheEnabled:    true,
-		CacheMaxEntries: 500,
-		LogQueries:      true,
-		DatabasePath:    dbPath,
+		ListenAddress:       listenAddr,
+		UpstreamServers:     []string{"1.1.1.1:53"},
+		CacheEnabled:        true,
+		CacheMaxEntries:     500,
+		LogQueries:          true,
+		DatabasePath:        dbPath,
+		HTTPRedirectEnabled: true,
+		HTTPRedirectAddress: redirAddr,
 	}
 	if err := config.SaveConfig(cfgPath, initialCfg); err != nil {
 		t.Fatalf("failed to save initial config: %v", err)
@@ -122,7 +133,26 @@ func TestFullApplicationIntegration(t *testing.T) {
 		t.Errorf("expected at least 4 queries recorded in metrics, got %d", stats.TotalQueries)
 	}
 
-	// 6. Test graceful stop and restart
+	// 6. Test HTTP Redirect functionality
+	httpClient := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: 2 * time.Second,
+	}
+	httpResp, err := httpClient.Get("http://" + redirAddr + "/gitrush.test")
+	if err != nil {
+		t.Fatalf("HTTP redirect query failed: %v", err)
+	}
+	defer httpResp.Body.Close()
+	if httpResp.StatusCode != 302 {
+		t.Errorf("expected status 302, got %d", httpResp.StatusCode)
+	}
+	if loc := httpResp.Header.Get("Location"); loc != "https://github.com/RushikeshIche" {
+		t.Errorf("expected location 'https://github.com/RushikeshIche', got '%s'", loc)
+	}
+
+	// 7. Test graceful stop and restart
 	if err := coreApp.StopServer(); err != nil {
 		t.Fatalf("failed to stop server: %v", err)
 	}

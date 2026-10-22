@@ -5,7 +5,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
-	coreapp "github.com/rushi/ResolverX/internal/app"
+	coreapp "github.com/RushikeshIche/ResolverX/internal/app"
 )
 
 // MainWindow represents the top-level Fyne GUI window for ResolverX.
@@ -15,6 +15,7 @@ type MainWindow struct {
 	coreApp   *coreapp.App
 	dashboard *DashboardView
 	records   *RecordsView
+	redirects *RedirectsView
 	settings  *SettingsView
 }
 
@@ -25,17 +26,19 @@ func NewMainWindow(core *coreapp.App) *MainWindow {
 
 	dash := NewDashboardView(core, w)
 	recs := NewRecordsView(core, w)
+	redirs := NewRedirectsView(core, w)
 	settings := NewSettingsView(core, w)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon("Dashboard", theme.HomeIcon(), dash.Build()),
 		container.NewTabItemWithIcon("DNS Records", theme.ListIcon(), recs.Build()),
+		container.NewTabItemWithIcon("URL Redirects", theme.ComputerIcon(), redirs.Build()),
 		container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), settings.Build()),
 	)
 	tabs.SetTabLocation(container.TabLocationTop)
 
 	w.SetContent(tabs)
-	w.Resize(fyne.NewSize(960, 680))
+	w.Resize(fyne.NewSize(980, 700))
 
 	// Ensure graceful cleanup on window close
 	w.SetOnClosed(func() {
@@ -48,6 +51,7 @@ func NewMainWindow(core *coreapp.App) *MainWindow {
 		coreApp:   core,
 		dashboard: dash,
 		records:   recs,
+		redirects: redirs,
 		settings:  settings,
 	}
 }

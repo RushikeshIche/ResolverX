@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rushi/ResolverX/internal/records"
-	"github.com/rushi/ResolverX/internal/storage"
+	"github.com/RushikeshIche/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/storage"
 )
 
 func TestServiceValidationAndNotification(t *testing.T) {

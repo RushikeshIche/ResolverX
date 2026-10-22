@@ -10,8 +10,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/rushi/ResolverX/internal/app"
-	"github.com/rushi/ResolverX/internal/metrics"
+	"github.com/RushikeshIche/ResolverX/internal/app"
+	"github.com/RushikeshIche/ResolverX/internal/metrics"
 )
 
 // DashboardView provides the resolver status controls, live metric counters, and query logs.

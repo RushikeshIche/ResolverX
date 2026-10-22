@@ -11,8 +11,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/rushi/ResolverX/internal/app"
-	"github.com/rushi/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/app"
+	"github.com/RushikeshIche/ResolverX/internal/records"
 )
 
 // RecordsView provides CRUD operations for custom DNS records.

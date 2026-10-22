@@ -10,12 +10,14 @@ import (
 
 // Config represents the application and DNS resolver configuration.
 type Config struct {
-	ListenAddress   string   `json:"listen_address"`
-	UpstreamServers []string `json:"upstream_servers"`
-	CacheEnabled    bool     `json:"cache_enabled"`
-	CacheMaxEntries int      `json:"cache_max_entries"`
-	LogQueries      bool     `json:"log_queries"`
-	DatabasePath    string   `json:"database_path"`
+	ListenAddress       string   `json:"listen_address"`
+	UpstreamServers     []string `json:"upstream_servers"`
+	CacheEnabled        bool     `json:"cache_enabled"`
+	CacheMaxEntries     int      `json:"cache_max_entries"`
+	LogQueries          bool     `json:"log_queries"`
+	DatabasePath        string   `json:"database_path"`
+	HTTPRedirectEnabled bool     `json:"http_redirect_enabled"`
+	HTTPRedirectAddress string   `json:"http_redirect_address"`
 }
 
 // DefaultConfig returns the default configuration for ResolverX.
@@ -26,10 +28,12 @@ func DefaultConfig() *Config {
 			"1.1.1.1:53",
 			"8.8.8.8:53",
 		},
-		CacheEnabled:    true,
-		CacheMaxEntries: 10000,
-		LogQueries:      true,
-		DatabasePath:    "resolverx.db",
+		CacheEnabled:        true,
+		CacheMaxEntries:     10000,
+		LogQueries:          true,
+		DatabasePath:        "resolverx.db",
+		HTTPRedirectEnabled: true,
+		HTTPRedirectAddress: "127.0.0.1:80",
 	}
 }
 
@@ -109,6 +113,9 @@ func (c *Config) Validate() error {
 	}
 	if c.DatabasePath == "" {
 		c.DatabasePath = "resolverx.db"
+	}
+	if c.HTTPRedirectAddress == "" {
+		c.HTTPRedirectAddress = "127.0.0.1:80"
 	}
 	return nil
 }

@@ -7,5 +7,7 @@
   "cache_enabled": true,
   "cache_max_entries": 10000,
   "log_queries": true,
-  "database_path": "resolverx.db"
+  "database_path": "resolverx.db",
+  "http_redirect_enabled": true,
+  "http_redirect_address": "127.0.0.1:80"
 }

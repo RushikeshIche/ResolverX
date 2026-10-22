@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	appdns "github.com/rushi/ResolverX/internal/dns"
+	appdns "github.com/RushikeshIche/ResolverX/internal/dns"
 )
 
 func createTestAResponse(name string, ipStr string, ttl uint32) *dns.Msg {

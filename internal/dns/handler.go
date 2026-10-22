@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/rushi/ResolverX/internal/metrics"
-	"github.com/rushi/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/metrics"
+	"github.com/RushikeshIche/ResolverX/internal/records"
 )
 
 // Handler processes DNS requests using local records, response cache, and upstream forwarding.

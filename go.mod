@@ -1,4 +1,4 @@
-module github.com/rushi/ResolverX
+module github.com/RushikeshIche/ResolverX
 
 go 1.27.3
 

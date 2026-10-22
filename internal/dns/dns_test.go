@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	appdns "github.com/rushi/ResolverX/internal/dns"
-	"github.com/rushi/ResolverX/internal/metrics"
-	"github.com/rushi/ResolverX/internal/records"
-	"github.com/rushi/ResolverX/internal/storage"
+	appdns "github.com/RushikeshIche/ResolverX/internal/dns"
+	"github.com/RushikeshIche/ResolverX/internal/metrics"
+	"github.com/RushikeshIche/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/storage"
 )
 
 // startMockUpstream boots a temporary in-process DNS server on a random loopback port.

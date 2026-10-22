@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rushi/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/records"
 )
 
 func TestValidateAndNormalizeDomain(t *testing.T) {

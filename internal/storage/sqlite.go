@@ -12,13 +12,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rushi/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/records"
+	"github.com/RushikeshIche/ResolverX/internal/redirects"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
 )
 
 var (
-	ErrRecordNotFound = errors.New("record not found")
+	ErrRecordNotFound   = errors.New("record not found")
 	ErrDuplicateRecord = errors.New("a record with this domain, type, and value already exists")
+	ErrRedirectNotFound = errors.New("redirect not found")
+	ErrDuplicateRedirect = errors.New("a redirect with this shortcut already exists")
 )
 
 // Store provides thread-safe persistent SQLite storage for custom DNS records.
@@ -76,6 +79,18 @@ func (s *Store) migrate() error {
 
 	CREATE INDEX IF NOT EXISTS idx_records_domain_type ON records(domain, type);
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_records_unique_entry ON records(domain, type, value);
+
+	CREATE TABLE IF NOT EXISTS redirects (
+		id TEXT PRIMARY KEY,
+		shortcut TEXT NOT NULL UNIQUE,
+		target_url TEXT NOT NULL,
+		status_code INTEGER NOT NULL DEFAULT 302,
+		description TEXT NOT NULL DEFAULT '',
+		created_at TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP NOT NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_redirects_shortcut ON redirects(shortcut);
 	`
 	_, err := s.db.Exec(schema)
 	return err
@@ -248,3 +263,150 @@ func (s *Store) FindRecords(ctx context.Context, domain string, recType records.
 
 	return result, rows.Err()
 }
+
+// CreateRedirect persists a new URL redirect shortcut.
+func (s *Store) CreateRedirect(ctx context.Context, r *redirects.Redirect) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if r.ID == "" {
+		r.ID = uuid.NewString()
+	}
+	now := time.Now().UTC()
+	if r.CreatedAt.IsZero() {
+		r.CreatedAt = now
+	}
+	r.UpdatedAt = now
+	r.Shortcut = redirects.CleanShortcut(r.Shortcut)
+
+	query := `
+	INSERT INTO redirects (id, shortcut, target_url, status_code, description, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+	_, err := s.db.ExecContext(ctx, query, r.ID, r.Shortcut, r.TargetURL, r.StatusCode, r.Description, r.CreatedAt, r.UpdatedAt)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateRedirect
+		}
+		return fmt.Errorf("failed to insert redirect: %w", err)
+	}
+	return nil
+}
+
+// UpdateRedirect modifies an existing URL redirect shortcut, target URL, status code, and description.
+func (s *Store) UpdateRedirect(ctx context.Context, r *redirects.Redirect) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	r.UpdatedAt = time.Now().UTC()
+	r.Shortcut = redirects.CleanShortcut(r.Shortcut)
+
+	query := `
+	UPDATE redirects
+	SET shortcut = ?, target_url = ?, status_code = ?, description = ?, updated_at = ?
+	WHERE id = ?
+	`
+	res, err := s.db.ExecContext(ctx, query, r.Shortcut, r.TargetURL, r.StatusCode, r.Description, r.UpdatedAt, r.ID)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateRedirect
+		}
+		return fmt.Errorf("failed to update redirect: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrRedirectNotFound
+	}
+
+	return nil
+}
+
+// DeleteRedirect removes a redirect by ID.
+func (s *Store) DeleteRedirect(ctx context.Context, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	query := `DELETE FROM redirects WHERE id = ?`
+	res, err := s.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete redirect: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrRedirectNotFound
+	}
+
+	return nil
+}
+
+// GetRedirect retrieves a single redirect by its ID.
+func (s *Store) GetRedirect(ctx context.Context, id string) (*redirects.Redirect, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	query := `SELECT id, shortcut, target_url, status_code, description, created_at, updated_at FROM redirects WHERE id = ?`
+	row := s.db.QueryRowContext(ctx, query, id)
+
+	var r redirects.Redirect
+	err := row.Scan(&r.ID, &r.Shortcut, &r.TargetURL, &r.StatusCode, &r.Description, &r.CreatedAt, &r.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRedirectNotFound
+		}
+		return nil, fmt.Errorf("failed to query redirect: %w", err)
+	}
+	return &r, nil
+}
+
+// FindRedirectByShortcut looks up a redirect by its shortcut string (case-insensitive).
+func (s *Store) FindRedirectByShortcut(ctx context.Context, shortcut string) (*redirects.Redirect, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	clean := redirects.CleanShortcut(shortcut)
+	query := `SELECT id, shortcut, target_url, status_code, description, created_at, updated_at FROM redirects WHERE shortcut = ?`
+	row := s.db.QueryRowContext(ctx, query, clean)
+
+	var r redirects.Redirect
+	err := row.Scan(&r.ID, &r.Shortcut, &r.TargetURL, &r.StatusCode, &r.Description, &r.CreatedAt, &r.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRedirectNotFound
+		}
+		return nil, fmt.Errorf("failed to find redirect by shortcut: %w", err)
+	}
+	return &r, nil
+}
+
+// ListRedirects returns all configured redirects sorted alphabetically by shortcut.
+func (s *Store) ListRedirects(ctx context.Context) ([]*redirects.Redirect, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	query := `SELECT id, shortcut, target_url, status_code, description, created_at, updated_at FROM redirects ORDER BY shortcut ASC`
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list redirects: %w", err)
+	}
+	defer rows.Close()
+
+	var result []*redirects.Redirect
+	for rows.Next() {
+		var r redirects.Redirect
+		if err := rows.Scan(&r.ID, &r.Shortcut, &r.TargetURL, &r.StatusCode, &r.Description, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan redirect row: %w", err)
+		}
+		result = append(result, &r)
+	}
+
+	return result, rows.Err()
+}
+
